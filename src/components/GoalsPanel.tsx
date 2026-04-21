@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Pencil, Plus, PartyPopper, Target, Bike, Gamepad2, BookOpen, Palette, Music, Plane, Gift, Trophy } from 'lucide-react';
-import { Child, Goal, GoalInput } from '../lib/types';
+import { Pencil, Plus, PartyPopper, Target, Bike, Gamepad2, BookOpen, Palette, Music, Plane, Gift, Trophy, TrendingUp } from 'lucide-react';
+import { Child, Goal, GoalContribution, GoalInput } from '../lib/types';
 import { useGoals } from '../context/GoalsContext';
 import { GoalFormModal } from './GoalFormModal';
 import { GoalContributeModal } from './GoalContributeModal';
@@ -12,7 +12,7 @@ interface GoalsPanelProps {
 }
 
 export function GoalsPanel({ child, kidMode }: GoalsPanelProps) {
-  const { goals, progressById, createGoal, updateGoal, archiveGoal, completeGoal } = useGoals();
+  const { goals, contributions, progressById, createGoal, updateGoal, archiveGoal, completeGoal } = useGoals();
   const ownGoals = goals.filter((g) => g.child_id === child.id);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Goal | null>(null);
@@ -62,11 +62,13 @@ export function GoalsPanel({ child, kidMode }: GoalsPanelProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {ownGoals.map((g) => {
             const p = progressById[g.id];
+            const goalContribs = contributions.filter((c) => c.goal_id === g.id);
             return (
               <GoalCard
                 key={g.id}
                 goal={g}
                 progress={p}
+                contributions={goalContribs}
                 onContribute={() => setContributingTo(g)}
                 onEdit={!kidMode ? () => openEdit(g) : undefined}
                 onComplete={
@@ -112,12 +114,14 @@ const ICONS: Record<string, typeof Target> = {
 function GoalCard({
   goal,
   progress,
+  contributions,
   onContribute,
   onEdit,
   onComplete,
 }: {
   goal: Goal;
   progress: { contributed: number; percent: number; remaining: number; complete: boolean } | undefined;
+  contributions: GoalContribution[];
   onContribute: () => void;
   onEdit?: () => void;
   onComplete?: () => void;
@@ -130,6 +134,21 @@ function GoalCard({
   const daysLeft = goal.target_date
     ? Math.ceil((new Date(goal.target_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
+
+  // Project completion date from last-4-weeks contribution velocity
+  const projectedDate: Date | null = (() => {
+    if (goal.is_complete || reached) return null;
+    const remaining = progress?.remaining ?? target;
+    if (remaining <= 0) return null;
+    const windowStart = Date.now() - 28 * 86400_000;
+    const recentNet = contributions
+      .filter((c) => new Date(c.created_at).getTime() >= windowStart)
+      .reduce((sum, c) => sum + (c.direction === 'contribute' ? Number(c.amount) : -Number(c.amount)), 0);
+    const weeklyRate = Math.max(0, recentNet) / 4;
+    if (weeklyRate === 0) return null;
+    const weeksToGo = Math.ceil(remaining / weeklyRate);
+    return new Date(Date.now() + weeksToGo * 7 * 86400_000);
+  })();
 
   return (
     <div
@@ -176,6 +195,12 @@ function GoalCard({
                 </>
               )}
             </div>
+            {projectedDate && !goal.is_complete && (
+              <div className="flex items-center gap-1 mt-1 text-[11px] text-emerald-600 font-medium">
+                <TrendingUp size={11} />
+                On track for {projectedDate.toLocaleDateString('default', { month: 'short', day: 'numeric' })}
+              </div>
+            )}
           </div>
           {onEdit && (
             <button

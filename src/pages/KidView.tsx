@@ -3,6 +3,7 @@ import { useFamily } from '../context/FamilyContext';
 import { useChores } from '../context/ChoresContext';
 import { KidChoresList } from '../components/KidChoresList';
 import { GoalsPanel } from '../components/GoalsPanel';
+import { WeeklyEarningsCard } from '../components/InsightsPanel';
 import { TransactionsList } from '../components/TransactionsList';
 import { formatMoney } from '../lib/balances';
 
@@ -84,6 +85,10 @@ export function KidView({ childId, onBack }: KidViewProps) {
             from="from-rose-400"
             to="to-rose-500"
           />
+        </div>
+
+        <div className="mt-10">
+          <WeeklyEarningsCard childId={child.id} />
         </div>
 
         <div className="mt-10">

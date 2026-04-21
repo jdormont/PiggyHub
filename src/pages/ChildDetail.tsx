@@ -5,6 +5,7 @@ import { useChores } from '../context/ChoresContext';
 import { ChildFormModal } from '../components/ChildFormModal';
 import { ChoresPanel } from '../components/ChoresPanel';
 import { GoalsPanel } from '../components/GoalsPanel';
+import { InsightsPanel } from '../components/InsightsPanel';
 import { MoneyActionsModal } from '../components/MoneyActionsModal';
 import { TransactionsList } from '../components/TransactionsList';
 import { ChildInput } from '../lib/types';
@@ -20,7 +21,7 @@ export function ChildDetail({ childId, onBack, onKidView }: ChildDetailProps) {
   const { children, updateChild, archiveChild } = useFamily();
   const { balancesByChild } = useChores();
   const child = children.find((c) => c.id === childId);
-  const [tab, setTab] = useState<'chores' | 'transactions' | 'goals'>('chores');
+  const [tab, setTab] = useState<'chores' | 'transactions' | 'goals' | 'insights'>('chores');
   const [editOpen, setEditOpen] = useState(false);
   const [moneyOpen, setMoneyOpen] = useState(false);
 
@@ -132,7 +133,7 @@ export function ChildDetail({ childId, onBack, onKidView }: ChildDetailProps) {
 
         <div className="bg-white border border-slate-200 rounded-2xl">
           <div className="flex border-b border-slate-100">
-            {(['chores', 'transactions', 'goals'] as const).map((t) => (
+            {(['chores', 'transactions', 'goals', 'insights'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -150,6 +151,7 @@ export function ChildDetail({ childId, onBack, onKidView }: ChildDetailProps) {
             {tab === 'chores' && <ChoresPanel child={child} />}
             {tab === 'transactions' && <TransactionsList childId={child.id} allowDelete />}
             {tab === 'goals' && <GoalsPanel child={child} />}
+            {tab === 'insights' && <InsightsPanel child={child} />}
           </div>
         </div>
       </main>
