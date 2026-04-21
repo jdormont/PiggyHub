@@ -183,8 +183,8 @@ function AllowanceRow({
       : 0;
 
   return (
-    <li className="flex items-center gap-3 bg-white/80 backdrop-blur rounded-xl border border-white px-3 py-2">
-      <span className="text-xl">{child.avatar}</span>
+    <li className="flex items-center gap-3 bg-white/80 backdrop-blur rounded-xl border border-white px-3 py-2.5">
+      <span className="text-xl shrink-0">{child.avatar}</span>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-slate-900 truncate">{child.name}</div>
         <div className="text-xs text-slate-500">
@@ -201,9 +201,9 @@ function AllowanceRow({
       <button
         onClick={onPay}
         disabled={paying}
-        className="px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 rounded-lg transition"
+        className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 rounded-lg transition min-h-[40px] shrink-0"
       >
-        {paying ? 'Paying' : 'Pay now'}
+        {paying ? 'Paying…' : 'Pay now'}
       </button>
     </li>
   );

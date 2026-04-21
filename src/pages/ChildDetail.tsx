@@ -55,51 +55,57 @@ export function ChildDetail({ childId, onBack, onKidView }: ChildDetailProps) {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition"
+            className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition min-h-[40px] px-1"
           >
             <ArrowLeft size={16} />
-            <span>Dashboard</span>
+            <span className="hidden sm:inline">Dashboard</span>
           </button>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
+            {/* Kid view — icon-only on mobile */}
             <button
               onClick={onKidView}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition min-h-[40px]"
+              aria-label="Kid view"
             >
-              <Eye size={15} />
-              Kid view
+              <Eye size={16} />
+              <span className="hidden sm:inline">Kid view</span>
             </button>
+            {/* Money — icon-only on mobile */}
             <button
               onClick={() => setMoneyOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition min-h-[40px]"
+              aria-label="Money"
             >
-              <Wallet size={14} />
-              Money
+              <Wallet size={16} />
+              <span className="hidden sm:inline">Money</span>
             </button>
+            {/* Edit — icon-only on mobile */}
             <button
               onClick={() => setEditOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition min-h-[40px]"
+              aria-label="Edit profile"
             >
-              <Pencil size={14} />
-              Edit profile
+              <Pencil size={16} />
+              <span className="hidden sm:inline">Edit</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-4xl">
+      <main className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-3xl sm:text-4xl shrink-0">
             {child.avatar}
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{child.name}</h1>
-            <p className="text-sm text-slate-500">
-              Split {child.split_spend}/{child.split_save}/{child.split_give}
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight truncate">{child.name}</h1>
+            <p className="text-sm text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span>Split {child.split_spend}/{child.split_save}/{child.split_give}</span>
               {child.savings_match_rate > 0 && (
-                <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 font-medium">
+                <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
                   <Sparkles size={12} /> {child.savings_match_rate}% match
                 </span>
               )}
@@ -107,7 +113,7 @@ export function ChildDetail({ childId, onBack, onKidView }: ChildDetailProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <BucketCard
             label="Spend"
             Icon={ShoppingBag}
@@ -132,12 +138,13 @@ export function ChildDetail({ childId, onBack, onKidView }: ChildDetailProps) {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl">
-          <div className="flex border-b border-slate-100">
+          {/* Scrollable tabs on mobile */}
+          <div className="flex border-b border-slate-100 overflow-x-auto scrollbar-none">
             {(['chores', 'transactions', 'goals', 'insights'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-5 py-3 text-sm font-medium capitalize transition ${
+                className={`px-4 sm:px-5 py-3 text-sm font-medium capitalize transition whitespace-nowrap min-h-[44px] ${
                   tab === t
                     ? 'text-slate-900 border-b-2 border-slate-900 -mb-px'
                     : 'text-slate-500 hover:text-slate-800'
@@ -147,7 +154,7 @@ export function ChildDetail({ childId, onBack, onKidView }: ChildDetailProps) {
               </button>
             ))}
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {tab === 'chores' && <ChoresPanel child={child} />}
             {tab === 'transactions' && <TransactionsList childId={child.id} allowDelete />}
             {tab === 'goals' && <GoalsPanel child={child} />}
@@ -188,16 +195,16 @@ function BucketCard({
   };
   const s = styles[tint];
   return (
-    <div className={`${s.bg} rounded-2xl p-5 border border-white/60`}>
+    <div className={`${s.bg} rounded-2xl p-3 sm:p-5 border border-white/60`}>
       <div className="flex items-center justify-between">
-        <div className={`${s.icon} w-10 h-10 rounded-xl bg-white/70 flex items-center justify-center`}>
-          <Icon size={18} />
+        <div className={`${s.icon} w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/70 flex items-center justify-center`}>
+          <Icon size={16} />
         </div>
         <span className={`${s.accent} text-xs font-semibold`}>{percent}%</span>
       </div>
-      <div className="mt-4">
-        <div className="text-xs font-medium text-slate-600 uppercase tracking-wider">{label}</div>
-        <div className="text-2xl font-bold text-slate-900 mt-1">{amount}</div>
+      <div className="mt-2 sm:mt-4">
+        <div className="text-[10px] sm:text-xs font-medium text-slate-600 uppercase tracking-wider">{label}</div>
+        <div className="text-lg sm:text-2xl font-bold text-slate-900 mt-0.5 sm:mt-1">{amount}</div>
       </div>
     </div>
   );

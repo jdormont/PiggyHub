@@ -137,7 +137,7 @@ export function GoalContributeModal({ open, onClose, goal }: GoalContributeModal
                 <button
                   key={v}
                   onClick={() => setAmount(String(v))}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+                  className="px-3 py-2 text-sm font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300 transition min-h-[40px]"
                 >
                   {formatMoney(v)}
                 </button>

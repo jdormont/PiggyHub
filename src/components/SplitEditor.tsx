@@ -25,19 +25,21 @@ export function SplitEditor({ spend, save, give, onChange }: SplitEditorProps) {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-3">
+      {/* Single row on tablet+, stacked on mobile for roomier inputs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {BUCKETS.map(({ key, label, Icon, color, bg, ring }) => {
           const value = key === 'spend' ? spend : key === 'save' ? save : give;
           return (
             <label
               key={key}
-              className={`${bg} ring-1 ${ring} rounded-xl p-3 flex flex-col items-center gap-2 cursor-text`}
+              className={`${bg} ring-1 ${ring} rounded-xl p-3 flex sm:flex-col items-center sm:items-center gap-3 sm:gap-2 cursor-text`}
             >
-              <Icon className={color} size={20} />
-              <span className="text-xs font-medium text-slate-600">{label}</span>
-              <div className="flex items-baseline">
+              <Icon className={`${color} shrink-0`} size={20} />
+              <span className="text-sm sm:text-xs font-medium text-slate-600 flex-1 sm:flex-none">{label}</span>
+              <div className="flex items-baseline ml-auto sm:ml-0">
                 <input
                   type="number"
+                  inputMode="numeric"
                   min={0}
                   max={100}
                   value={value}

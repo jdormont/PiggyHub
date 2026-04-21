@@ -135,18 +135,18 @@ function BigBucket({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${from} ${to} text-white p-6 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01]`}
+      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${from} ${to} text-white p-5 sm:p-6 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99]`}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-sm font-semibold uppercase tracking-wider text-white/80">
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-white/80">
             {label}
           </div>
-          <div className="text-5xl font-extrabold mt-2">{amount}</div>
-          <div className="text-sm text-white/90 mt-2">{subtitle}</div>
+          <div className="text-4xl sm:text-5xl font-extrabold mt-1.5 sm:mt-2 tabular-nums">{amount}</div>
+          <div className="text-xs sm:text-sm text-white/90 mt-1.5 sm:mt-2">{subtitle}</div>
         </div>
-        <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-          <Icon size={28} />
+        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+          <Icon size={24} />
         </div>
       </div>
     </div>

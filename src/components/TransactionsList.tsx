@@ -43,7 +43,7 @@ export function TransactionsList({ childId, limit, allowDelete, compact }: Trans
   return (
     <div className="space-y-4">
       {!limit && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2">
           <FilterGroup label="Bucket" options={BUCKETS} value={bucket} onChange={(v) => setBucket(v as 'all' | Bucket)} />
           <FilterGroup label="Type" options={TYPES} value={type} onChange={(v) => setType(v as 'all' | TxType)} />
         </div>
@@ -81,7 +81,7 @@ function TxRow({ tx, onDelete }: { tx: Transaction; onDelete?: () => void }) {
   const dateLabel = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   const timeLabel = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   return (
-    <li className="p-3 flex items-center gap-3 hover:bg-slate-50 transition group">
+    <li className="p-3 flex items-center gap-3 hover:bg-slate-50 transition">
       <div className={`w-9 h-9 rounded-xl ${tint} flex items-center justify-center shrink-0`}>
         <Icon size={16} />
       </div>
@@ -92,14 +92,15 @@ function TxRow({ tx, onDelete }: { tx: Transaction; onDelete?: () => void }) {
           {tx.category && <> · {tx.category}</>}
         </div>
       </div>
-      <div className={`text-sm font-semibold tabular-nums ${positive ? 'text-emerald-700' : 'text-rose-600'}`}>
+      <div className={`text-sm font-semibold tabular-nums shrink-0 ${positive ? 'text-emerald-700' : 'text-rose-600'}`}>
         {positive ? '+' : ''}
         {formatMoney(Number(tx.amount))}
       </div>
+      {/* Always visible on touch, hover-fade on pointer devices */}
       {onDelete && (
         <button
           onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition"
+          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition min-w-[36px] min-h-[36px] flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100"
           aria-label="Delete transaction"
         >
           <Trash2 size={14} />
@@ -123,12 +124,12 @@ function FilterGroup<T extends string>({
   return (
     <div>
       <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">{label}</div>
-      <div className="inline-flex bg-slate-100 rounded-lg p-0.5">
+      <div className="flex bg-slate-100 rounded-lg p-0.5 overflow-x-auto">
         {options.map((o) => (
           <button
             key={o}
             onClick={() => onChange(o)}
-            className={`px-2.5 py-1 text-xs font-semibold capitalize rounded-md transition ${
+            className={`px-3 py-1.5 text-xs font-semibold capitalize rounded-md transition whitespace-nowrap min-h-[32px] ${
               value === o ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >

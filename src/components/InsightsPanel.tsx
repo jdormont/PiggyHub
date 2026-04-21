@@ -35,8 +35,8 @@ export function InsightsPanel({ child }: InsightsPanelProps) {
 
   return (
     <div className="space-y-6">
-      {/* Lifetime stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Lifetime stats — 2 cols on phone, 4 on tablet+ */}
+      <div className="grid grid-cols-2 gap-3">
         <StatCard label="Total earned" value={formatMoney(stats.totalEarned)} color="text-sky-600" />
         <StatCard label="Total spent" value={formatMoney(stats.totalSpent)} color="text-rose-500" />
         <StatCard label="Total saved" value={formatMoney(stats.totalSaved)} color="text-emerald-600" />
@@ -297,19 +297,19 @@ export function WeeklyEarningsCard({ childId }: { childId: string }) {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl p-4 border border-sky-200">
+        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl p-4 border border-sky-200 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
             <Zap size={13} className="text-sky-500" />
             <span className="text-xs font-semibold text-sky-700 uppercase tracking-wide">This week</span>
           </div>
-          <div className="text-2xl font-extrabold text-sky-700">{formatMoney(thisWeek)}</div>
+          <div className="text-xl sm:text-2xl font-extrabold text-sky-700 tabular-nums">{formatMoney(thisWeek)}</div>
         </div>
-        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
             <Calendar size={13} className="text-slate-400" />
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Last week</span>
           </div>
-          <div className="text-2xl font-extrabold text-slate-500">{formatMoney(lastWeek)}</div>
+          <div className="text-xl sm:text-2xl font-extrabold text-slate-500 tabular-nums">{formatMoney(lastWeek)}</div>
         </div>
       </div>
     </div>
