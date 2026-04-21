@@ -135,14 +135,20 @@ function AllowanceDueBanner({
   onPay: (c: Child) => Promise<void>;
   payingId: string | null;
 }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const hasOverdue = childrenDue.some(
+    (c) => c.allowance_next_date !== null && c.allowance_next_date < today,
+  );
   return (
-    <div className="mb-6 bg-gradient-to-r from-amber-50 to-sky-50 border border-amber-200 rounded-2xl p-4">
+    <div className={`mb-6 border rounded-2xl p-4 ${hasOverdue ? 'bg-gradient-to-r from-rose-50 to-amber-50 border-rose-200' : 'bg-gradient-to-r from-amber-50 to-sky-50 border-amber-200'}`}>
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-lg bg-white/80 text-amber-700 flex items-center justify-center">
+        <div className={`w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center ${hasOverdue ? 'text-rose-600' : 'text-amber-700'}`}>
           <CalendarClock size={16} />
         </div>
         <div>
-          <div className="text-sm font-semibold text-slate-900">Allowance due</div>
+          <div className="text-sm font-semibold text-slate-900">
+            Allowance {hasOverdue ? 'overdue' : 'due'}
+          </div>
           <div className="text-xs text-slate-600">
             {childrenDue.length === 1 ? '1 child has allowance ready to pay.' : `${childrenDue.length} children have allowance ready to pay.`}
           </div>
@@ -150,29 +156,56 @@ function AllowanceDueBanner({
       </div>
       <ul className="space-y-2">
         {childrenDue.map((c) => (
-          <li
-            key={c.id}
-            className="flex items-center gap-3 bg-white/80 backdrop-blur rounded-xl border border-white px-3 py-2"
-          >
-            <span className="text-xl">{c.avatar}</span>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-slate-900 truncate">{c.name}</div>
-              <div className="text-xs text-slate-500">
-                {formatMoney(Number(c.allowance_amount))} {c.allowance_frequency} · due{' '}
-                {c.allowance_next_date}
-              </div>
-            </div>
-            <button
-              onClick={() => onPay(c)}
-              disabled={payingId === c.id}
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 rounded-lg transition"
-            >
-              {payingId === c.id ? 'Paying' : 'Pay now'}
-            </button>
-          </li>
+          <AllowanceRow key={c.id} child={c} paying={payingId === c.id} onPay={() => onPay(c)} today={today} />
         ))}
       </ul>
     </div>
+  );
+}
+
+function AllowanceRow({
+  child,
+  paying,
+  onPay,
+  today,
+}: {
+  child: Child;
+  paying: boolean;
+  onPay: () => void;
+  today: string;
+}) {
+  const daysOverdue =
+    child.allowance_next_date && child.allowance_next_date < today
+      ? Math.floor(
+          (new Date(today).getTime() - new Date(child.allowance_next_date).getTime()) /
+            86400_000,
+        )
+      : 0;
+
+  return (
+    <li className="flex items-center gap-3 bg-white/80 backdrop-blur rounded-xl border border-white px-3 py-2">
+      <span className="text-xl">{child.avatar}</span>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-slate-900 truncate">{child.name}</div>
+        <div className="text-xs text-slate-500">
+          {formatMoney(Number(child.allowance_amount))} {child.allowance_frequency}
+          {daysOverdue > 0 ? (
+            <span className="ml-1 text-rose-600 font-semibold">
+              · {daysOverdue} day{daysOverdue === 1 ? '' : 's'} overdue
+            </span>
+          ) : (
+            <span className="ml-1">· due today</span>
+          )}
+        </div>
+      </div>
+      <button
+        onClick={onPay}
+        disabled={paying}
+        className="px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 rounded-lg transition"
+      >
+        {paying ? 'Paying' : 'Pay now'}
+      </button>
+    </li>
   );
 }
 

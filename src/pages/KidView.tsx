@@ -3,6 +3,7 @@ import { useFamily } from '../context/FamilyContext';
 import { useChores } from '../context/ChoresContext';
 import { KidChoresList } from '../components/KidChoresList';
 import { GoalsPanel } from '../components/GoalsPanel';
+import { BadgesShelf } from '../components/BadgesShelf';
 import { WeeklyEarningsCard } from '../components/InsightsPanel';
 import { TransactionsList } from '../components/TransactionsList';
 import { formatMoney } from '../lib/balances';
@@ -100,6 +101,10 @@ export function KidView({ childId, onBack }: KidViewProps) {
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
             <GoalsPanel child={child} kidMode />
           </div>
+        </div>
+
+        <div className="mt-10">
+          <BadgesShelf child={child} />
         </div>
 
         <div className="mt-10">

@@ -21,10 +21,20 @@ export interface Child {
   allowance_next_date: string | null;
   savings_match_rate: number;
   is_archived: boolean;
+  badges: Badge[];
   created_at: string;
 }
 
-export type ChildInput = Omit<Child, 'id' | 'family_id' | 'created_at' | 'is_archived'>;
+export type BadgeMilestone = 'streak_5' | 'streak_10' | 'streak_25';
+
+export interface Badge {
+  type: BadgeMilestone;
+  chore_id: string;
+  chore_title: string;
+  earned_at: string;
+}
+
+export type ChildInput = Omit<Child, 'id' | 'family_id' | 'created_at' | 'is_archived' | 'badges'>;
 
 export type ChoreFrequency = 'once' | 'daily' | 'weekly' | 'monthly';
 export type CompletionStatus = 'pending' | 'approved' | 'rejected';

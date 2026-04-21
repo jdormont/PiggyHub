@@ -45,6 +45,7 @@ function makeChild(overrides: Partial<Child> = {}): Child {
     allowance_next_date: null,
     savings_match_rate: 0,
     is_archived: false,
+    badges: [],
     created_at: new Date().toISOString(),
     ...overrides,
   };

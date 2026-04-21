@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { Child, ChildInput, Family } from '../lib/types';
+import { Badge, Child, ChildInput, Family } from '../lib/types';
 import { useAuth } from './AuthContext';
 
 interface FamilyContextValue {
@@ -11,6 +11,7 @@ interface FamilyContextValue {
   createChild: (input: ChildInput) => Promise<Child>;
   updateChild: (id: string, input: Partial<ChildInput>) => Promise<Child>;
   archiveChild: (id: string) => Promise<void>;
+  awardBadge: (childId: string, badge: Badge) => Promise<void>;
 }
 
 const FamilyContext = createContext<FamilyContextValue | undefined>(undefined);
@@ -106,9 +107,27 @@ export function FamilyProvider({ children: reactChildren }: { children: ReactNod
     setChildren((prev) => prev.filter((c) => c.id !== id));
   };
 
+  const awardBadge = async (childId: string, badge: Badge) => {
+    const child = children.find((c) => c.id === childId);
+    if (!child) return;
+    const alreadyHas = child.badges.some(
+      (b) => b.type === badge.type && b.chore_id === badge.chore_id,
+    );
+    if (alreadyHas) return;
+    const newBadges = [...child.badges, badge];
+    const { data, error } = await supabase
+      .from('children')
+      .update({ badges: newBadges })
+      .eq('id', childId)
+      .select()
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (data) setChildren((prev) => prev.map((c) => (c.id === childId ? (data as Child) : c)));
+  };
+
   return (
     <FamilyContext.Provider
-      value={{ family, children, loading, refresh, createChild, updateChild, archiveChild }}
+      value={{ family, children, loading, refresh, createChild, updateChild, archiveChild, awardBadge }}
     >
       {reactChildren}
     </FamilyContext.Provider>

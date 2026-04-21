@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { Balances, Bucket, Chore, ChoreCompletion, ChoreInput, Transaction, TxType } from '../lib/types';
+import { Badge, BadgeMilestone, Balances, Bucket, Chore, ChoreCompletion, ChoreInput, Transaction, TxType } from '../lib/types';
 import { emptyBalances, splitEarning } from '../lib/balances';
 import { buildApprovalPlan } from '../lib/choreApproval';
 import { useFamily } from './FamilyContext';
@@ -62,7 +62,7 @@ interface ChoresContextValue {
 const ChoresContext = createContext<ChoresContextValue | undefined>(undefined);
 
 export function ChoresProvider({ children: reactChildren }: { children: ReactNode }) {
-  const { family, children: kids, updateChild } = useFamily();
+  const { family, children: kids, updateChild, awardBadge } = useFamily();
   const [chores, setChores] = useState<Chore[]>([]);
   const [completions, setCompletions] = useState<ChoreCompletion[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -187,6 +187,24 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
 
     setCompletions((prev) => prev.map((c) => (c.id === completionId ? (updated as ChoreCompletion) : c)));
     if (rows.length) setTransactions((prev) => [...rows, ...prev]);
+
+    // Award streak milestone badges
+    const milestones: { threshold: number; type: BadgeMilestone }[] = [
+      { threshold: 5, type: 'streak_5' },
+      { threshold: 10, type: 'streak_10' },
+      { threshold: 25, type: 'streak_25' },
+    ];
+    for (const m of milestones) {
+      if (plan.streak === m.threshold) {
+        const badge: Badge = {
+          type: m.type,
+          chore_id: chore.id,
+          chore_title: chore.title,
+          earned_at: new Date().toISOString(),
+        };
+        await awardBadge(child.id, badge).catch(() => {});
+      }
+    }
   };
 
   const insertTransactions = async (rows: Omit<Transaction, 'id' | 'created_at'>[]): Promise<Transaction[]> => {
