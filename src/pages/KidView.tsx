@@ -22,8 +22,9 @@ export function KidView({ childId, onBack }: KidViewProps) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <button
+          type="button"
           onClick={onBack}
-          className="px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg"
+          className="px-5 py-2.5 bg-brand-600 text-white text-sm font-bold rounded-full"
         >
           Back
         </button>
@@ -34,82 +35,88 @@ export function KidView({ childId, onBack }: KidViewProps) {
   const balances = balancesByChild[child.id] ?? { spend: 0, save: 0, give: 0, total: 0 };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-sky-50 to-white">
-      <header className="sticky top-0 z-10 bg-white/70 backdrop-blur border-b border-white">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-sky-50 to-stone-50">
+      {/* Header */}
+      <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-md border-b border-white/80">
+        <div className="max-w-2xl mx-auto px-5 py-3.5 flex items-center justify-between">
           <button
+            type="button"
             onClick={onBack}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition"
+            className="flex items-center gap-1.5 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft size={16} />
             Parent view
           </button>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-brand-500 bg-brand-50 px-3 py-1 rounded-full">
             Kid Mode
           </span>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-10">
+      <main className="max-w-2xl mx-auto px-5 py-10">
+        {/* Hero */}
         <div className="flex flex-col items-center text-center mb-10">
-          <div className="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center text-6xl mb-4">
+          <div className="w-28 h-28 rounded-[2rem] bg-white shadow-xl flex items-center justify-center text-7xl mb-5 animate-scale-in">
             {child.avatar}
           </div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">
             Hi {child.name}!
           </h1>
-          <p className="text-slate-600 mt-1">Here's your money.</p>
+          <p className="text-slate-500 font-bold mt-2 text-lg">Here's your money 💰</p>
         </div>
 
-        <div className="space-y-4">
+        {/* Money buckets */}
+        <div className="space-y-4 mb-10">
           <BigBucket
             label="Spend"
             Icon={ShoppingBag}
             amount={formatMoney(balances.spend)}
             subtitle="Money you can use on fun things"
-            from="from-sky-400"
-            to="to-sky-500"
+            gradient="from-sky-400 via-sky-500 to-blue-500"
           />
           <BigBucket
             label="Save"
             Icon={PiggyBank}
             amount={formatMoney(balances.save)}
             subtitle="Growing toward your goals"
-            from="from-emerald-400"
-            to="to-emerald-500"
+            gradient="from-emerald-400 via-emerald-500 to-green-500"
           />
           <BigBucket
             label="Give"
             Icon={Heart}
             amount={formatMoney(balances.give)}
             subtitle="For people who need it"
-            from="from-rose-400"
-            to="to-rose-500"
+            gradient="from-rose-400 via-rose-500 to-pink-500"
           />
         </div>
 
-        <div className="mt-10">
+        {/* Weekly earnings */}
+        <div className="mb-10">
           <WeeklyEarningsCard childId={child.id} />
         </div>
 
-        <div className="mt-10">
+        {/* Chores */}
+        <div className="mb-10">
           <KidChoresList child={child} />
         </div>
 
-        <div className="mt-10">
-          <h2 className="text-2xl font-extrabold text-slate-900 mb-4">My goals</h2>
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        {/* Goals */}
+        <div className="mb-10">
+          <h2 className="text-3xl font-black text-slate-900 mb-4">My goals 🎯</h2>
+          <div className="bg-white rounded-3xl border border-stone-200 p-5 shadow-sm">
             <GoalsPanel child={child} kidMode />
           </div>
         </div>
 
-        <div className="mt-10">
+        {/* Badges */}
+        <div className="mb-10">
           <BadgesShelf child={child} />
         </div>
 
-        <div className="mt-10">
-          <h2 className="text-2xl font-extrabold text-slate-900 mb-4">Recent activity</h2>
-          <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+        {/* Recent activity */}
+        <div className="mb-10">
+          <h2 className="text-3xl font-black text-slate-900 mb-4">Recent activity</h2>
+          <div className="bg-white rounded-3xl border border-stone-200 p-4 shadow-sm">
             <TransactionsList childId={child.id} limit={8} compact />
           </div>
         </div>
@@ -123,30 +130,34 @@ function BigBucket({
   Icon,
   amount,
   subtitle,
-  from,
-  to,
+  gradient,
 }: {
   label: string;
   Icon: typeof ShoppingBag;
   amount: string;
   subtitle: string;
-  from: string;
-  to: string;
+  gradient: string;
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${from} ${to} text-white p-5 sm:p-6 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99]`}
+      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${gradient} text-white p-6 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]`}
     >
-      <div className="flex items-center justify-between gap-4">
+      {/* decorative circle */}
+      <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-white/10" />
+      <div className="absolute -right-2 -bottom-8 w-20 h-20 rounded-full bg-white/10" />
+
+      <div className="relative flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-white/80">
+          <div className="text-sm font-extrabold uppercase tracking-widest text-white/75">
             {label}
           </div>
-          <div className="text-4xl sm:text-5xl font-extrabold mt-1.5 sm:mt-2 tabular-nums">{amount}</div>
-          <div className="text-xs sm:text-sm text-white/90 mt-1.5 sm:mt-2">{subtitle}</div>
+          <div className="text-5xl sm:text-6xl font-black mt-2 tabular-nums drop-shadow-sm">
+            {amount}
+          </div>
+          <div className="text-sm font-bold text-white/80 mt-2">{subtitle}</div>
         </div>
-        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
-          <Icon size={24} />
+        <div className="w-16 h-16 rounded-2xl bg-white/25 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-inner">
+          <Icon size={28} />
         </div>
       </div>
     </div>

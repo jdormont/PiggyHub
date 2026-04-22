@@ -1,5 +1,5 @@
 import { Child } from '../lib/types';
-import { ChevronRight, Clock, Sparkles } from 'lucide-react';
+import { ChevronRight, Sparkles } from 'lucide-react';
 import { useChores } from '../context/ChoresContext';
 import { formatMoney } from '../lib/balances';
 
@@ -7,6 +7,21 @@ interface ChildCardProps {
   child: Child;
   onOpen: () => void;
   onKidView: () => void;
+}
+
+const AVATAR_GRADIENTS = [
+  'from-violet-100 to-violet-200',
+  'from-sky-100 to-sky-200',
+  'from-emerald-100 to-emerald-200',
+  'from-amber-100 to-amber-200',
+  'from-rose-100 to-rose-200',
+  'from-fuchsia-100 to-fuchsia-200',
+];
+
+function avatarGradient(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
 }
 
 export function ChildCard({ child, onOpen, onKidView }: ChildCardProps) {
@@ -17,54 +32,53 @@ export function ChildCard({ child, onOpen, onKidView }: ChildCardProps) {
   ).length;
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all overflow-hidden">
-      <button onClick={onOpen} className="w-full text-left p-5">
+    <div className="group bg-white rounded-3xl shadow-sm hover:shadow-lg border border-stone-200/80 hover:border-stone-300 transition-all duration-200 overflow-hidden">
+      <button type="button" onClick={onOpen} className="w-full text-left p-6">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-3xl">
+          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${avatarGradient(child.name)} flex items-center justify-center text-4xl shrink-0 shadow-sm`}>
             {child.avatar}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pt-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-900 text-lg truncate">{child.name}</h3>
+              <h3 className="font-extrabold text-slate-900 text-xl truncate">{child.name}</h3>
               {pendingCount > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                  <Clock size={11} />
-                  {pendingCount}
+                <span className="inline-flex items-center text-xs font-bold text-amber-700 bg-amber-100 rounded-full px-2.5 py-0.5">
+                  {pendingCount} pending
                 </span>
               )}
               <ChevronRight
-                size={16}
-                className="ml-auto text-slate-400 group-hover:text-slate-600 group-hover:translate-x-0.5 transition"
+                size={18}
+                className="ml-auto text-stone-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all shrink-0"
               />
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Total balance{' '}
-              <span className="font-semibold text-slate-700">{formatMoney(balances.total)}</span>
+            <p className="text-sm text-slate-500 font-semibold mt-0.5">
+              Total{' '}
+              <span className="text-slate-800">{formatMoney(balances.total)}</span>
               {child.savings_match_rate > 0 && (
-                <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 font-medium">
+                <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 font-bold">
                   <Sparkles size={11} /> {child.savings_match_rate}% match
                 </span>
               )}
             </p>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mt-5 grid grid-cols-3 gap-2.5">
           <BucketPill label="Spend" value={formatMoney(balances.spend)} tint="sky" />
           <BucketPill label="Save" value={formatMoney(balances.save)} tint="emerald" />
           <BucketPill label="Give" value={formatMoney(balances.give)} tint="rose" />
         </div>
       </button>
-      <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
-        <span className="text-xs text-slate-500">
+      <div className="px-6 py-3.5 border-t border-stone-100 bg-stone-50/60 flex justify-between items-center">
+        <span className="text-xs text-slate-400 font-semibold">
           {child.allowance_frequency === 'none'
             ? 'No allowance set'
             : `$${Number(child.allowance_amount).toFixed(2)} / ${child.allowance_frequency}`}
         </span>
         <button
           onClick={onKidView}
-          className="text-xs font-semibold text-slate-700 hover:text-slate-900 transition"
+          className="text-xs font-extrabold text-brand-600 hover:text-brand-700 transition-colors px-3 py-1.5 rounded-full hover:bg-brand-50"
         >
-          Open kid view
+          Kid view →
         </button>
       </div>
     </div>
@@ -73,14 +87,14 @@ export function ChildCard({ child, onOpen, onKidView }: ChildCardProps) {
 
 function BucketPill({ label, value, tint }: { label: string; value: string; tint: 'sky' | 'emerald' | 'rose' }) {
   const styles: Record<typeof tint, string> = {
-    sky: 'bg-sky-50 text-sky-700',
-    emerald: 'bg-emerald-50 text-emerald-700',
-    rose: 'bg-rose-50 text-rose-700',
+    sky: 'bg-sky-50 text-sky-700 border border-sky-100',
+    emerald: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+    rose: 'bg-rose-50 text-rose-700 border border-rose-100',
   };
   return (
-    <div className={`${styles[tint]} rounded-lg px-2 py-1.5`}>
-      <div className="text-[10px] font-medium uppercase tracking-wider opacity-75">{label}</div>
-      <div className="text-sm font-semibold">{value}</div>
+    <div className={`${styles[tint]} rounded-2xl px-3 py-2.5`}>
+      <div className="text-[10px] font-extrabold uppercase tracking-widest opacity-60">{label}</div>
+      <div className="text-base font-extrabold mt-0.5">{value}</div>
     </div>
   );
 }
