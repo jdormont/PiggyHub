@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CheckCircle2, Clock, Flame, Star, XCircle, Zap } from 'lucide-react';
-import { Child, Chore } from '../lib/types';
+import { Child, Chore, ChoreCompletion } from '../lib/types';
 import { useChores } from '../context/ChoresContext';
 import { formatMoney } from '../lib/balances';
 
@@ -24,6 +24,23 @@ function isDueToday(chore: Chore): boolean {
     default:
       return false;
   }
+}
+
+function isApprovedThisPeriod(chore: Chore, completions: ChoreCompletion[]): boolean {
+  const approved = completions.filter((c) => c.chore_id === chore.id && c.status === 'approved');
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  if (chore.frequency === 'weekly') {
+    return approved.some((c) => c.completed_at.slice(0, 10) === todayStr);
+  }
+  if (chore.frequency === 'once') {
+    return approved.length > 0;
+  }
+  if (chore.frequency === 'monthly') {
+    const yearMonth = todayStr.slice(0, 7);
+    return approved.some((c) => c.completed_at.slice(0, 7) === yearMonth);
+  }
+  return false;
 }
 
 function isOverdue(chore: Chore): boolean {
@@ -69,17 +86,26 @@ export function KidChoresList({ child }: KidChoresListProps) {
     return map;
   }, [childChores, childCompletions]);
 
+  // Only show: daily chores + chores due today that haven't been approved for this period
+  const feedChores = useMemo(() => {
+    return childChores.filter((chore) => {
+      if (chore.frequency === 'daily') return true;
+      if (!isDueToday(chore)) return false;
+      return !isApprovedThisPeriod(chore, childCompletions);
+    });
+  }, [childChores, childCompletions]);
+
   const sortedChores = useMemo(() => {
-    return [...childChores].sort((a, b) => {
+    return [...feedChores].sort((a, b) => {
       const aToday = isDueToday(a) ? 0 : 1;
       const bToday = isDueToday(b) ? 0 : 1;
       return aToday - bToday;
     });
-  }, [childChores]);
+  }, [feedChores]);
 
   const dueTodayCount = useMemo(
-    () => childChores.filter((c) => isDueToday(c) && !pendingByChore[c.id]).length,
-    [childChores, pendingByChore],
+    () => feedChores.filter((c) => isDueToday(c) && !pendingByChore[c.id]).length,
+    [feedChores, pendingByChore],
   );
 
   const recent = useMemo(
