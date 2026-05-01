@@ -27,5 +27,5 @@ Built with React, TypeScript, Tailwind CSS, Vite, and Supabase (Postgres + Auth 
 
 ## Key URLs
 
-- App: https://piggyhub.app
-- Sign up: https://piggyhub.app (unauthenticated users are redirected to sign-in/sign-up)
+- App: https://piggy.joshdormont.com
+- Sign up: https://piggy.joshdormont.com (unauthenticated users are redirected to sign-in/sign-up)
