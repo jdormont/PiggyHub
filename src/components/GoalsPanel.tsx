@@ -76,6 +76,7 @@ export function GoalsPanel({ child, kidMode }: GoalsPanelProps) {
                     ? () => completeGoal(g.id)
                     : undefined
                 }
+                kidMode={kidMode}
               />
             );
           })}
@@ -94,6 +95,7 @@ export function GoalsPanel({ child, kidMode }: GoalsPanelProps) {
           open={Boolean(contributingTo)}
           onClose={() => setContributingTo(null)}
           goal={contributingTo}
+          kidMode={kidMode}
         />
       )}
     </div>
@@ -111,6 +113,17 @@ const ICONS: Record<string, typeof Target> = {
   gift: Gift,
 };
 
+const ICON_GRADIENTS: Record<string, string> = {
+  target: 'from-brand-400 to-brand-600',
+  bike:   'from-sky-400 to-blue-500',
+  game:   'from-violet-400 to-purple-600',
+  book:   'from-amber-400 to-orange-500',
+  art:    'from-pink-400 to-rose-500',
+  music:  'from-indigo-400 to-violet-600',
+  trip:   'from-teal-400 to-emerald-500',
+  gift:   'from-rose-400 to-pink-600',
+};
+
 function GoalCard({
   goal,
   progress,
@@ -118,6 +131,7 @@ function GoalCard({
   onContribute,
   onEdit,
   onComplete,
+  kidMode,
 }: {
   goal: Goal;
   progress: { contributed: number; percent: number; remaining: number; complete: boolean } | undefined;
@@ -125,6 +139,7 @@ function GoalCard({
   onContribute: () => void;
   onEdit?: () => void;
   onComplete?: () => void;
+  kidMode?: boolean;
 }) {
   const Icon = ICONS[goal.emoji] ?? Target;
   const percent = progress?.percent ?? 0;
@@ -162,19 +177,21 @@ function GoalCard({
     >
       {goal.image_url ? (
         <div
-          className="h-28 bg-slate-100 bg-cover bg-center"
+          className={`${kidMode ? 'h-32' : 'h-28'} bg-slate-100 bg-cover bg-center`}
           style={{ backgroundImage: `url(${goal.image_url})` }}
         />
       ) : (
-        <div className="h-16 bg-gradient-to-r from-slate-50 to-slate-100 flex items-center justify-center">
-          <Icon size={28} className="text-slate-400" />
+        <div
+          className={`${kidMode ? 'h-28 bg-gradient-to-br ' + (ICON_GRADIENTS[goal.emoji] ?? ICON_GRADIENTS.target) : 'h-16 bg-gradient-to-r from-slate-50 to-slate-100'} flex items-center justify-center`}
+        >
+          <Icon size={kidMode ? 44 : 28} className={kidMode ? 'text-white/90 drop-shadow' : 'text-slate-400'} />
         </div>
       )}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 truncate">{goal.title}</h3>
+              <h3 className={`${kidMode ? 'text-xl font-extrabold' : 'text-base font-bold'} text-slate-900 truncate`}>{goal.title}</h3>
               {goal.is_complete && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full px-2 py-0.5">
                   <Trophy size={10} />
@@ -213,29 +230,34 @@ function GoalCard({
           )}
         </div>
 
-        <div className="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div className={`mt-3 ${kidMode ? 'h-3' : 'h-2'} bg-slate-100 rounded-full overflow-hidden`}>
           <div
             className={`h-full rounded-full transition-[width] duration-700 ${
-              goal.is_complete || reached ? 'bg-emerald-500' : 'bg-sky-500'
+              goal.is_complete || reached ? 'bg-emerald-500' : kidMode ? 'bg-gradient-to-r from-brand-400 to-brand-600' : 'bg-sky-500'
             }`}
             style={{ width: `${percent}%` }}
           />
         </div>
-        <div className="flex items-center justify-between mt-1.5 text-xs">
-          <span className="font-semibold text-slate-700">{percent}%</span>
+        <div className={`flex items-center justify-between mt-1.5 ${kidMode ? 'text-sm' : 'text-xs'}`}>
+          <span className={`${kidMode ? 'font-extrabold text-slate-800' : 'font-semibold text-slate-700'}`}>{percent}%</span>
           {!goal.is_complete && (
-            <span className="text-slate-500">{formatMoney(progress?.remaining ?? target)} to go</span>
+            <span className={`${kidMode ? 'font-semibold text-slate-600' : 'text-slate-500'}`}>{formatMoney(progress?.remaining ?? target)} to go</span>
           )}
         </div>
 
         <div className="mt-4 flex gap-2">
           {!goal.is_complete && (
             <button
+              type="button"
               onClick={onContribute}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition"
+              className={`flex-1 inline-flex items-center justify-center gap-2 text-white bg-emerald-500 hover:bg-emerald-600 transition font-extrabold ${
+                kidMode
+                  ? 'px-4 py-3.5 text-base rounded-2xl shadow-md active:scale-95'
+                  : 'px-3 py-2 text-xs font-semibold rounded-lg'
+              }`}
             >
-              <Plus size={14} />
-              Add money
+              <Plus size={kidMode ? 18 : 14} />
+              {kidMode ? 'Add money 💰' : 'Add money'}
             </button>
           )}
           {onComplete && (
