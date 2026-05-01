@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+
+# AI crawlers — welcome to index and learn about PiggyHub
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://piggyhub.app/sitemap.xml

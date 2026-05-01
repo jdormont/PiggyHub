@@ -1,0 +1,31 @@
+# PiggyHub
+
+> Family financial education app — parents manage chores and allowances while kids learn to Spend, Save, and Give.
+
+PiggyHub is a web application for families with children. Every dollar a child earns through chores or allowances is automatically split across three buckets — **Spend**, **Save**, and **Give** — teaching healthy money habits from an early age. Parents have a full management dashboard; children get a simplified, colorful kid-friendly view of their own balances and progress.
+
+## Who it's for
+
+- **Parents** who want a structured, trackable system for chores and allowances
+- **Children ages 5–16** learning about money, saving, and generosity
+- **Families** building long-term financial literacy habits together
+
+## Core features
+
+- **Three-bucket system**: Every dollar earned splits into Spend, Save, and Give at a ratio parents configure per child
+- **Chore engine**: Parents assign chores with dollar values; kids mark them done; parents approve
+- **Allowances**: Scheduled (weekly / biweekly / monthly) with one-click payment
+- **Savings goals**: Kids create goals (bike, game, trip, gift…) with target amounts and dates; they contribute from any bucket and watch a progress bar fill up
+- **Parent savings match**: Parents can match a percentage of what kids put into their Save bucket to incentivize saving
+- **Kid view**: Age-appropriate dashboard with large colorful bucket cards, goal progress, chore list, badges, and streaks
+- **Badges & streaks**: Achievement system rewards consistent chore completion
+- **Security**: Row-level security via Supabase — parents only see their own family's data
+
+## Technology
+
+Built with React, TypeScript, Tailwind CSS, Vite, and Supabase (Postgres + Auth + RLS).
+
+## Key URLs
+
+- App: https://piggyhub.app
+- Sign up: https://piggyhub.app (unauthenticated users are redirected to sign-in/sign-up)
