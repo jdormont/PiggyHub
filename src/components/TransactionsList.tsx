@@ -15,9 +15,15 @@ const BUCKETS: ('all' | Bucket)[] = ['all', 'spend', 'save', 'give'];
 const TYPES: ('all' | TxType)[] = ['all', 'earn', 'allowance', 'spend', 'transfer', 'match'];
 
 export function TransactionsList({ childId, limit, allowDelete, compact }: TransactionsListProps) {
-  const { transactions, deleteTransaction } = useChores();
+  const { transactions, transactionFetchLimit, deleteTransaction } = useChores();
   const [bucket, setBucket] = useState<'all' | Bucket>('all');
   const [type, setType] = useState<'all' | TxType>('all');
+
+  const childTotal = useMemo(
+    () => transactions.filter((t) => t.child_id === childId).length,
+    [transactions, childId],
+  );
+  const atFetchLimit = childTotal >= transactionFetchLimit;
 
   const filtered = useMemo(() => {
     let rows = transactions.filter((t) => t.child_id === childId);
@@ -69,6 +75,11 @@ export function TransactionsList({ childId, limit, allowDelete, compact }: Trans
             />
           ))}
         </ul>
+      )}
+      {atFetchLimit && (
+        <p className="text-center text-xs text-slate-400 font-medium pt-1">
+          Showing the {transactionFetchLimit} most recent transactions.
+        </p>
       )}
     </div>
   );

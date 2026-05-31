@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { FamilyProvider } from './context/FamilyContext';
 import { ChoresProvider } from './context/ChoresContext';
 import { GoalsProvider } from './context/GoalsContext';
+import { ToastProvider } from './components/Toast';
 import { AuthPage } from './pages/AuthPage';
 import { Dashboard } from './pages/Dashboard';
 import { ChildDetail } from './pages/ChildDetail';
@@ -59,7 +60,9 @@ function AppInner() {
 function App() {
   return (
     <AuthProvider>
-      <AppInner />
+      <ToastProvider>
+        <AppInner />
+      </ToastProvider>
     </AuthProvider>
   );
 }

@@ -30,6 +30,8 @@ export interface TransferInput {
   description?: string;
 }
 
+const TRANSACTION_FETCH_LIMIT = 200;
+
 function advanceAllowanceDate(current: string | null, freq: 'weekly' | 'biweekly' | 'monthly'): string {
   const base = current ? new Date(current + 'T00:00:00Z') : new Date();
   if (freq === 'weekly') base.setUTCDate(base.getUTCDate() + 7);
@@ -43,6 +45,7 @@ interface ChoresContextValue {
   chores: Chore[];
   completions: ChoreCompletion[];
   transactions: Transaction[];
+  transactionFetchLimit: number;
   balancesByChild: Record<string, Balances>;
   pendingCount: number;
   createChore: (childId: string, input: ChoreInput) => Promise<Chore>;
@@ -82,7 +85,7 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
     const [choresRes, completionsRes, txRes] = await Promise.all([
       supabase.from('chores').select('*').in('child_id', childIds).eq('is_active', true).order('created_at'),
       supabase.from('chore_completions').select('*').in('child_id', childIds).order('completed_at', { ascending: false }),
-      supabase.from('transactions').select('*').in('child_id', childIds).order('created_at', { ascending: false }),
+      supabase.from('transactions').select('*').in('child_id', childIds).order('created_at', { ascending: false }).limit(TRANSACTION_FETCH_LIMIT),
     ]);
     setChores((choresRes.data ?? []) as Chore[]);
     setCompletions((completionsRes.data ?? []) as ChoreCompletion[]);
@@ -343,6 +346,7 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
         chores,
         completions,
         transactions,
+        transactionFetchLimit: TRANSACTION_FETCH_LIMIT,
         balancesByChild,
         pendingCount,
         createChore,

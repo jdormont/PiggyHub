@@ -5,6 +5,7 @@ import { useFamily } from '../context/FamilyContext';
 import { useChores } from '../context/ChoresContext';
 import { ChildCard } from '../components/ChildCard';
 import { ChildFormModal } from '../components/ChildFormModal';
+import { useToast } from '../components/Toast';
 import { Child, ChildInput } from '../lib/types';
 import { formatMoney } from '../lib/balances';
 
@@ -17,6 +18,7 @@ export function Dashboard({ onOpenChild, onOpenKidView }: DashboardProps) {
   const { signOut } = useAuth();
   const { children, loading, createChild } = useFamily();
   const { pendingCount, payAllowance } = useChores();
+  const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
 
@@ -89,8 +91,9 @@ export function Dashboard({ onOpenChild, onOpenKidView }: DashboardProps) {
               setPayingId(c.id);
               try {
                 await payAllowance(c.id);
+                toast.success(`Allowance paid for ${c.name}!`);
               } catch (e) {
-                alert(e instanceof Error ? e.message : 'Could not pay allowance');
+                toast.error(e instanceof Error ? e.message : 'Could not pay allowance');
               } finally {
                 setPayingId(null);
               }
