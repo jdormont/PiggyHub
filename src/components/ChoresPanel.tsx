@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Plus, Pencil, Check, X, Flame, Trophy, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { useChores } from '../context/ChoresContext';
+import { useToast } from './Toast';
 import { Child, Chore, ChoreInput, DAYS_OF_WEEK_SHORT } from '../lib/types';
 import { ChoreFormModal } from './ChoreFormModal';
 import { formatMoney } from '../lib/balances';
@@ -12,6 +13,7 @@ interface ChoresPanelProps {
 export function ChoresPanel({ child }: ChoresPanelProps) {
   const { chores, completions, createChore, updateChore, archiveChore, approveCompletion, rejectCompletion } =
     useChores();
+  const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Chore | null>(null);
 
@@ -71,10 +73,13 @@ export function ChoresPanel({ child }: ChoresPanelProps) {
                   key={c.id}
                   chore={chore}
                   completedAt={c.completed_at}
-                  onApprove={() => approveCompletion(c.id)}
-                  onReject={async () => {
-                    const note = prompt('Why is this being rejected? (optional)') ?? '';
-                    await rejectCompletion(c.id, note.trim());
+                  onApprove={async () => {
+                    await approveCompletion(c.id);
+                    toast.success(`${chore?.title ?? 'Chore'} approved!`);
+                  }}
+                  onReject={async (note) => {
+                    await rejectCompletion(c.id, note);
+                    toast.info(`${chore?.title ?? 'Chore'} rejected.`);
                   }}
                 />
               );
@@ -210,19 +215,68 @@ function PendingRow({
   chore: Chore | undefined;
   completedAt: string;
   onApprove: () => Promise<void>;
-  onReject: () => Promise<void>;
+  onReject: (note: string) => Promise<void>;
 }) {
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [note, setNote] = useState('');
+
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
     try {
       await fn();
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Something went wrong');
+      toast.error(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setBusy(false);
     }
   };
+
+  if (rejecting) {
+    return (
+      <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
+        <div className="font-bold text-slate-900 truncate">{chore?.title ?? 'Chore'}</div>
+        <div>
+          <label className="text-xs font-semibold text-slate-500 mb-1 block">
+            Reason for rejection <span className="font-normal">(optional)</span>
+          </label>
+          <input
+            autoFocus
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') run(() => onReject(note.trim())).then(() => { setRejecting(false); setNote(''); });
+              if (e.key === 'Escape') { setRejecting(false); setNote(''); }
+            }}
+            placeholder="e.g. Didn't clean under the bed"
+            className="w-full border border-rose-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => { setRejecting(false); setNote(''); }}
+            disabled={busy}
+            className="flex-1 inline-flex items-center justify-center px-3 py-2.5 text-sm font-bold text-slate-600 bg-white border border-stone-200 hover:bg-stone-50 rounded-xl transition-all disabled:opacity-50 min-h-[44px]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => run(() => onReject(note.trim())).then(() => { setRejecting(false); setNote(''); })}
+            disabled={busy}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition-all disabled:opacity-50 min-h-[44px]"
+          >
+            <X size={14} />
+            {busy ? 'Rejecting…' : 'Confirm reject'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
       <div className="flex-1 min-w-0">
@@ -237,7 +291,7 @@ function PendingRow({
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => run(onReject)}
+          onClick={() => setRejecting(true)}
           disabled={busy}
           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-bold text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-50 min-h-[44px]"
         >
@@ -251,7 +305,7 @@ function PendingRow({
           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-all disabled:opacity-50 min-h-[44px]"
         >
           <Check size={14} />
-          Approve
+          {busy ? 'Approving…' : 'Approve'}
         </button>
       </div>
     </div>
