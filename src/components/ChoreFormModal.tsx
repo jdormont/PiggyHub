@@ -52,7 +52,7 @@ export function ChoreFormModal({ open, onClose, onSubmit, onArchive, initial }: 
     try {
       const value = form.is_milestone ? 0 : Math.max(0, Number(form.value) || 0);
       const due_date = form.frequency === 'once' || form.frequency === 'monthly' ? form.due_date : null;
-      const day_of_week = form.frequency === 'weekly' ? form.day_of_week ?? 0 : null;
+      const day_of_week = form.frequency === 'weekly' ? form.day_of_week : null;
       await onSubmit({ ...form, title: form.title.trim(), value, due_date, day_of_week });
       onClose();
     } catch (e) {
@@ -179,10 +179,11 @@ export function ChoreFormModal({ open, onClose, onSubmit, onArchive, initial }: 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Day of week</label>
             <select
-              value={form.day_of_week ?? 0}
-              onChange={(e) => setForm({ ...form, day_of_week: Number(e.target.value) })}
+              value={form.day_of_week ?? ''}
+              onChange={(e) => setForm({ ...form, day_of_week: e.target.value === '' ? null : Number(e.target.value) })}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none transition bg-white"
             >
+              <option value="">Any day of the week</option>
               {DAYS_OF_WEEK.map((d, i) => (
                 <option key={d} value={i}>
                   {d}

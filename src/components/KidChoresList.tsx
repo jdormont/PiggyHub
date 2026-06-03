@@ -8,19 +8,38 @@ interface KidChoresListProps {
   child: Child;
 }
 
+function getLocalDateStr(dateInput: string | Date = new Date()) {
+  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getCurrentWeekRange() {
+  const now = new Date();
+  const dayOfWeek = (now.getDay() + 6) % 7; // Monday-based: Monday = 0, Sunday = 6
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+  const end = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+  return {
+    start: getLocalDateStr(start),
+    end: getLocalDateStr(end),
+  };
+}
+
 function isDueToday(chore: Chore): boolean {
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = getLocalDateStr(today);
   const jsDay = today.getDay();
 
   switch (chore.frequency) {
     case 'daily':
       return true;
     case 'weekly':
-      return chore.day_of_week === jsDay;
+      return chore.day_of_week !== null && chore.day_of_week === jsDay;
     case 'once':
     case 'monthly':
-      return chore.due_date !== null && chore.due_date <= todayStr;
+      return chore.due_date !== null && chore.due_date === todayStr;
     default:
       return false;
   }
@@ -28,24 +47,41 @@ function isDueToday(chore: Chore): boolean {
 
 function isApprovedThisPeriod(chore: Chore, completions: ChoreCompletion[]): boolean {
   const approved = completions.filter((c) => c.chore_id === chore.id && c.status === 'approved');
-  const todayStr = new Date().toISOString().slice(0, 10);
+  if (approved.length === 0) return false;
 
+  const localToday = getLocalDateStr();
+
+  if (chore.frequency === 'daily') {
+    return approved.some((c) => getLocalDateStr(c.completed_at) === localToday);
+  }
   if (chore.frequency === 'weekly') {
-    return approved.some((c) => c.completed_at.slice(0, 10) === todayStr);
+    const { start, end } = getCurrentWeekRange();
+    return approved.some((c) => {
+      const compDate = getLocalDateStr(c.completed_at);
+      return compDate >= start && compDate <= end;
+    });
   }
   if (chore.frequency === 'once') {
     return approved.length > 0;
   }
   if (chore.frequency === 'monthly') {
-    const yearMonth = todayStr.slice(0, 7);
-    return approved.some((c) => c.completed_at.slice(0, 7) === yearMonth);
+    const currentMonth = localToday.slice(0, 7); // YYYY-MM
+    return approved.some((c) => getLocalDateStr(c.completed_at).slice(0, 7) === currentMonth);
   }
   return false;
 }
 
 function isOverdue(chore: Chore): boolean {
+  const today = new Date();
+  const todayStr = getLocalDateStr(today);
+  const jsDay = today.getDay();
+
+  if (chore.frequency === 'weekly' && chore.day_of_week !== null) {
+    const todayIndex = (jsDay + 6) % 7;
+    const choreIndex = (chore.day_of_week + 6) % 7;
+    return choreIndex < todayIndex;
+  }
   if (chore.frequency === 'once' || chore.frequency === 'monthly') {
-    const todayStr = new Date().toISOString().slice(0, 10);
     return chore.due_date !== null && chore.due_date < todayStr;
   }
   return false;
@@ -86,20 +122,30 @@ export function KidChoresList({ child }: KidChoresListProps) {
     return map;
   }, [childChores, childCompletions]);
 
-  // Only show: daily chores + chores due today that haven't been approved for this period
+  // Only show chores that are not approved yet this period, and are relevant for this week or overdue
   const feedChores = useMemo(() => {
+    const { end } = getCurrentWeekRange();
     return childChores.filter((chore) => {
-      if (chore.frequency === 'daily') return true;
-      if (!isDueToday(chore)) return false;
-      return !isApprovedThisPeriod(chore, childCompletions);
+      if (isApprovedThisPeriod(chore, childCompletions)) return false;
+
+      if (chore.frequency === 'daily' || chore.frequency === 'weekly') {
+        return true;
+      }
+      if (chore.frequency === 'once' || chore.frequency === 'monthly') {
+        return chore.due_date === null || chore.due_date <= end;
+      }
+      return false;
     });
   }, [childChores, childCompletions]);
 
   const sortedChores = useMemo(() => {
     return [...feedChores].sort((a, b) => {
-      const aToday = isDueToday(a) ? 0 : 1;
-      const bToday = isDueToday(b) ? 0 : 1;
-      return aToday - bToday;
+      const getPriority = (c: Chore) => {
+        if (isOverdue(c)) return 0;
+        if (isDueToday(c)) return 1;
+        return 2;
+      };
+      return getPriority(a) - getPriority(b);
     });
   }, [feedChores]);
 
@@ -155,7 +201,7 @@ export function KidChoresList({ child }: KidChoresListProps) {
 
             let cardStyle = 'bg-white border-stone-200';
             if (justDone) cardStyle = 'bg-emerald-50 border-emerald-300';
-            else if (dueToday && !isPending && overdue) cardStyle = 'bg-rose-50 border-rose-200';
+            else if (overdue && !isPending) cardStyle = 'bg-rose-50 border-rose-200';
             else if (dueToday && !isPending) cardStyle = 'bg-amber-50 border-amber-200';
 
             return (
@@ -185,9 +231,14 @@ export function KidChoresList({ child }: KidChoresListProps) {
                         {streak} streak!
                       </span>
                     )}
+                    {overdue && !isPending && (
+                      <span className="text-sm font-extrabold text-rose-600">
+                        ⚠️ Overdue
+                      </span>
+                    )}
                     {dueToday && !isPending && (
-                      <span className={`text-sm font-extrabold ${overdue ? 'text-rose-600' : 'text-amber-600'}`}>
-                        {overdue ? '⚠️ Overdue' : '⏰ Due today'}
+                      <span className="text-sm font-extrabold text-amber-600">
+                        ⏰ Due today
                       </span>
                     )}
                     {chore.description && (
@@ -212,10 +263,10 @@ export function KidChoresList({ child }: KidChoresListProps) {
                     onClick={() => tap(chore)}
                     disabled={!!busyId}
                     className={`inline-flex items-center gap-2 px-5 py-3.5 text-base font-extrabold text-white rounded-2xl transition-all active:scale-95 disabled:opacity-60 shadow-sm shrink-0 ${
-                      dueToday
-                        ? overdue
-                          ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
-                          : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'
+                      overdue
+                        ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
+                        : dueToday
+                        ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'
                         : 'bg-slate-800 hover:bg-slate-900'
                     }`}
                   >

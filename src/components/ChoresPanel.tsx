@@ -124,8 +124,10 @@ export function ChoresPanel({ child }: ChoresPanelProps) {
                       </span>
                     )}
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-stone-100 px-2 py-0.5 rounded-full">
-                      {chore.frequency === 'weekly' && chore.day_of_week != null
-                        ? `Weekly · ${DAYS_OF_WEEK_SHORT[chore.day_of_week]}`
+                      {chore.frequency === 'weekly'
+                        ? chore.day_of_week != null
+                          ? `Weekly · ${DAYS_OF_WEEK_SHORT[chore.day_of_week]}`
+                          : 'Weekly · Any day'
                         : chore.frequency}
                     </span>
                     {streakByChore[chore.id] >= 2 && (
