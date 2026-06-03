@@ -22,6 +22,10 @@ npx vitest                                       # watch mode
 
 Requires `.env` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 
+## Guidelines
+
+- **Plan / Don't Write Code Mode**: When asked to run in "plan" mode or "dont write any code", always draft and present the implementation plan first, then wait for the user's explicit review and approval before writing any code or making workspace changes.
+
 ## Architecture
 
 React 18 + TypeScript + Tailwind, bundled with Vite. Backend is Supabase (Postgres + Auth + Row-Level Security) — there is **no custom server and no API layer**: components and contexts call `supabase` (from [src/lib/supabase.ts](src/lib/supabase.ts)) directly.
