@@ -122,3 +122,18 @@ export interface GoalContribution {
   direction: GoalContributionDirection;
   created_at: string;
 }
+
+export type KidTransferStatus = 'pending' | 'approved' | 'rejected';
+
+export interface KidTransferRequest {
+  id: string;
+  sender_child_id: string;
+  recipient_child_id: string;
+  bucket: Bucket;
+  amount: number;
+  message: string;
+  status: KidTransferStatus;
+  rejection_note: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}

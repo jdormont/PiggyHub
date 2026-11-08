@@ -17,6 +17,7 @@ let mockTables: Record<string, any[]> = {
   transactions: [],
   goals: [],
   goal_contributions: [],
+  kid_transfer_requests: [],
 };
 
 const resetMockDb = () => {
@@ -29,6 +30,7 @@ const resetMockDb = () => {
     transactions: [],
     goals: [],
     goal_contributions: [],
+  kid_transfer_requests: [],
   };
 };
 

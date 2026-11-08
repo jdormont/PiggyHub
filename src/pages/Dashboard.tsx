@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import { useChores } from '../context/ChoresContext';
 import { ChildCard } from '../components/ChildCard';
+import { TransferRequestsPanel } from '../components/TransferRequestsPanel';
 import { ChildFormModal } from '../components/ChildFormModal';
 import { useToast } from '../components/Toast';
 import { Child, ChildInput } from '../lib/types';
@@ -17,7 +18,7 @@ interface DashboardProps {
 export function Dashboard({ onOpenChild, onOpenKidView }: DashboardProps) {
   const { signOut } = useAuth();
   const { children, loading, createChild } = useFamily();
-  const { pendingCount, payAllowance } = useChores();
+  const { pendingCount, pendingTransferCount, payAllowance } = useChores();
   const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -65,9 +66,9 @@ export function Dashboard({ onOpenChild, onOpenKidView }: DashboardProps) {
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Your family</h1>
             <p className="text-slate-500 mt-1 font-medium">
               Balances, chores, and goals for each kid.
-              {pendingCount > 0 && (
+              {pendingCount + pendingTransferCount > 0 && (
                 <span className="ml-2 inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-100 rounded-full px-2.5 py-0.5">
-                  {pendingCount} pending
+                  {pendingCount + pendingTransferCount} pending
                 </span>
               )}
             </p>
@@ -100,6 +101,8 @@ export function Dashboard({ onOpenChild, onOpenKidView }: DashboardProps) {
             }}
           />
         )}
+
+        <TransferRequestsPanel />
 
         {loading ? (
           <div className="text-slate-400 font-medium">Loading…</div>
