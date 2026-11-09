@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { Badge, BadgeMilestone, Balances, Bucket, Chore, ChoreCompletion, ChoreInput, Transaction, TxType } from '../lib/types';
+import { Badge, BadgeMilestone, Balances, Bucket, Chore, ChoreCompletion, ChoreInput, KidTransferRequest, Transaction, TxType } from '../lib/types';
 import { emptyBalances, splitEarning } from '../lib/balances';
 import { buildApprovalPlan } from '../lib/choreApproval';
+import { buildKidTransferPlan, validateKidTransfer } from '../lib/kidTransfer';
 import { useFamily } from './FamilyContext';
 
 export interface AddMoneyInput {
@@ -30,6 +31,14 @@ export interface TransferInput {
   description?: string;
 }
 
+export interface KidTransferInput {
+  senderId: string;
+  recipientId: string;
+  bucket: Bucket;
+  amount: number;
+  message?: string;
+}
+
 const TRANSACTION_FETCH_LIMIT = 200;
 
 function advanceAllowanceDate(current: string | null, freq: 'weekly' | 'biweekly' | 'monthly'): string {
@@ -48,6 +57,11 @@ interface ChoresContextValue {
   transactionFetchLimit: number;
   balancesByChild: Record<string, Balances>;
   pendingCount: number;
+  transferRequests: KidTransferRequest[];
+  pendingTransferCount: number;
+  requestKidTransfer: (input: KidTransferInput) => Promise<KidTransferRequest>;
+  approveKidTransfer: (requestId: string) => Promise<void>;
+  rejectKidTransfer: (requestId: string, note: string) => Promise<void>;
   createChore: (childId: string, input: ChoreInput) => Promise<Chore>;
   updateChore: (id: string, input: Partial<ChoreInput>) => Promise<Chore>;
   archiveChore: (id: string) => Promise<void>;
@@ -69,6 +83,7 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
   const [chores, setChores] = useState<Chore[]>([]);
   const [completions, setCompletions] = useState<ChoreCompletion[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transferRequests, setTransferRequests] = useState<KidTransferRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   const childIds = useMemo(() => kids.map((c) => c.id), [kids]);
@@ -78,18 +93,21 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
       setChores([]);
       setCompletions([]);
       setTransactions([]);
+      setTransferRequests([]);
       setLoading(false);
       return;
     }
     setLoading(true);
-    const [choresRes, completionsRes, txRes] = await Promise.all([
+    const [choresRes, completionsRes, txRes, transferRes] = await Promise.all([
       supabase.from('chores').select('*').in('child_id', childIds).eq('is_active', true).order('created_at'),
       supabase.from('chore_completions').select('*').in('child_id', childIds).order('completed_at', { ascending: false }),
       supabase.from('transactions').select('*').in('child_id', childIds).order('created_at', { ascending: false }).limit(TRANSACTION_FETCH_LIMIT),
+      supabase.from('kid_transfer_requests').select('*').in('sender_child_id', childIds).order('created_at', { ascending: false }),
     ]);
     setChores((choresRes.data ?? []) as Chore[]);
     setCompletions((completionsRes.data ?? []) as ChoreCompletion[]);
     setTransactions((txRes.data ?? []) as Transaction[]);
+    setTransferRequests((transferRes.data ?? []) as KidTransferRequest[]);
     setLoading(false);
   }, [family, childIds]);
 
@@ -113,6 +131,11 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
   const pendingCount = useMemo(
     () => completions.filter((c) => c.status === 'pending').length,
     [completions],
+  );
+
+  const pendingTransferCount = useMemo(
+    () => transferRequests.filter((r) => r.status === 'pending').length,
+    [transferRequests],
   );
 
   const createChore = async (childId: string, input: ChoreInput): Promise<Chore> => {
@@ -326,6 +349,77 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const requestKidTransfer = async ({ senderId, recipientId, bucket, amount, message }: KidTransferInput) => {
+    const sender = kids.find((k) => k.id === senderId);
+    const recipient = kids.find((k) => k.id === recipientId);
+    if (!sender || !recipient) throw new Error('Child not found.');
+    const err = validateKidTransfer(
+      { senderId, recipientId, bucket, amount },
+      balancesByChild[senderId] ?? emptyBalances(),
+    );
+    if (err) throw new Error(err);
+    const { data, error } = await supabase
+      .from('kid_transfer_requests')
+      .insert({
+        sender_child_id: senderId,
+        recipient_child_id: recipientId,
+        bucket,
+        amount: Math.round(amount * 100) / 100,
+        message: message?.trim() ?? '',
+      })
+      .select()
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Could not send request.');
+    setTransferRequests((prev) => [data as KidTransferRequest, ...prev]);
+    return data as KidTransferRequest;
+  };
+
+  const approveKidTransfer = async (requestId: string) => {
+    const req = transferRequests.find((r) => r.id === requestId);
+    if (!req) throw new Error('Request not found.');
+    if (req.status !== 'pending') throw new Error('Already reviewed.');
+    const sender = kids.find((k) => k.id === req.sender_child_id);
+    const recipient = kids.find((k) => k.id === req.recipient_child_id);
+    if (!sender || !recipient) throw new Error('Child not found.');
+
+    // Pure plan first: throws if the sender's balance has dropped since the request.
+    const plan = buildKidTransferPlan(req, sender, recipient, balancesByChild[sender.id] ?? emptyBalances());
+
+    const { data: updated, error: updErr } = await supabase
+      .from('kid_transfer_requests')
+      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .eq('id', requestId)
+      .select()
+      .maybeSingle();
+    if (updErr) throw new Error(updErr.message);
+    if (!updated) throw new Error('Could not approve request.');
+
+    try {
+      await insertTransactions(plan);
+    } catch (e) {
+      // Don't leave an "approved" request with no ledger rows behind.
+      await supabase.from('kid_transfer_requests').update({ status: 'pending', reviewed_at: null }).eq('id', requestId);
+      throw e;
+    }
+    setTransferRequests((prev) => prev.map((r) => (r.id === requestId ? (updated as KidTransferRequest) : r)));
+  };
+
+  const rejectKidTransfer = async (requestId: string, note: string) => {
+    const req = transferRequests.find((r) => r.id === requestId);
+    if (!req) throw new Error('Request not found.');
+    if (req.status !== 'pending') throw new Error('Already reviewed.');
+    const { data, error } = await supabase
+      .from('kid_transfer_requests')
+      .update({ status: 'rejected', reviewed_at: new Date().toISOString(), rejection_note: note || null })
+      .eq('id', requestId)
+      .select()
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Could not reject request.');
+    setTransferRequests((prev) => prev.map((r) => (r.id === requestId ? (data as KidTransferRequest) : r)));
+  };
+
   const rejectCompletion = async (completionId: string, note: string) => {
     const nowIso = new Date().toISOString();
     const { data, error } = await supabase
@@ -349,6 +443,11 @@ export function ChoresProvider({ children: reactChildren }: { children: ReactNod
         transactionFetchLimit: TRANSACTION_FETCH_LIMIT,
         balancesByChild,
         pendingCount,
+        transferRequests,
+        pendingTransferCount,
+        requestKidTransfer,
+        approveKidTransfer,
+        rejectKidTransfer,
         createChore,
         updateChore,
         archiveChore,

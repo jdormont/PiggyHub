@@ -5,6 +5,7 @@ import { KidChoresList } from '../components/KidChoresList';
 import { GoalsPanel } from '../components/GoalsPanel';
 import { BadgesShelf } from '../components/BadgesShelf';
 import { WeeklyEarningsCard } from '../components/InsightsPanel';
+import { KidSendMoney } from '../components/KidSendMoney';
 import { TransactionsList } from '../components/TransactionsList';
 import { formatMoney } from '../lib/balances';
 
@@ -106,6 +107,11 @@ export function KidView({ childId, onBack }: KidViewProps) {
           <div className="bg-white rounded-3xl border border-stone-200 p-5 shadow-sm">
             <GoalsPanel child={child} kidMode />
           </div>
+        </div>
+
+        {/* Send to sibling */}
+        <div className="mb-10">
+          <KidSendMoney child={child} />
         </div>
 
         {/* Badges */}
